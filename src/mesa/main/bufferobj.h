@@ -104,6 +104,11 @@ _mesa_multi_bind_lookup_bufferobj(struct gl_context *ctx,
                                   GLuint index, const char *caller);
 
 extern void
+_mesa_bind_buffer_base_shader_storage_buffer(struct gl_context *ctx,
+                                       GLuint index,
+                                       struct gl_buffer_object *bufObj);
+
+extern void
 _mesa_initialize_buffer_object(struct gl_context *ctx,
                                struct gl_buffer_object *obj,
                                GLuint name);
