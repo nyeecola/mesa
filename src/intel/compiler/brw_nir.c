@@ -814,6 +814,10 @@ brw_postprocess_nir(nir_shader *nir, const struct brw_compiler *compiler,
 
    UNUSED bool progress; /* Written by OPT */
 
+   // TODO: can this get called even if gl_context->shader_profiling_enabled is false somehow?
+   if (getenv("MESA_SHADER_TIME"))
+      NIR_PASS_V(nir, nir_shader_time);
+
    OPT(brw_nir_lower_mem_access_bit_sizes);
 
    do {

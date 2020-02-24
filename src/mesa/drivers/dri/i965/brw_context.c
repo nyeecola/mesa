@@ -996,6 +996,8 @@ brwCreateContext(gl_api api,
       intelDestroyContext(driContextPriv);
       return false;
    }
+   if (getenv("MESA_SHADER_TIME"))
+      ctx->shader_profiling_enabled = true;
 
    driContextSetFlags(ctx, ctx_config->flags);
 
