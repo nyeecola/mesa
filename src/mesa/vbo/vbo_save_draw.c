@@ -212,8 +212,8 @@ vbo_save_playback_vertex_list(struct gl_context *ctx, void *data)
       if (node->vertex_count > 0) {
          GLuint min_index = _vbo_save_get_min_index(node);
          GLuint max_index = _vbo_save_get_max_index(node);
-         ctx->Driver.Draw(ctx, node->prims, node->prim_count, NULL, GL_TRUE,
-                          min_index, max_index, NULL, 0, NULL);
+         _mesa_driver_draw(ctx, node->prims, node->prim_count, NULL, GL_TRUE,
+                           min_index, max_index, NULL, 0, NULL);
       }
    }
 
