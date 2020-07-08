@@ -240,6 +240,8 @@ files_libmesa_common = files(
   'main/samplerobj.h',
   'main/scissor.c',
   'main/scissor.h',
+  'main/shader_time.c',
+  'main/shader_time.h',
   'main/shaderapi.c',
   'main/shaderapi.h',
   'main/shaderimage.c',

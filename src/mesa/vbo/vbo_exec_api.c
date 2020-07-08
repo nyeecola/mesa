@@ -1251,6 +1251,12 @@ vbo_exec_FlushVertices(struct gl_context *ctx, GLuint flags)
 {
    struct vbo_exec_context *exec = &vbo_context(ctx)->exec;
 
+   /* when shader profiling is enabled, a double flush can happen
+    * because we must change some buffer bindings, this is a workaround
+    * to avoid that */
+   if (ctx->shader_profiling_enabled && exec->flush_call_depth > 0)
+      return;
+
 #ifndef NDEBUG
    /* debug check: make sure we don't get called recursively */
    exec->flush_call_depth++;

@@ -208,6 +208,7 @@ files_libglsl = files(
   'serialize.h',
   'shader_cache.cpp',
   'shader_cache.h',
+  'shader_time.cpp'
 )
 
 files_libglsl_standalone = files(

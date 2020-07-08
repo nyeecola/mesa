@@ -90,6 +90,8 @@
 #include "main/shaderobj.h"
 #include "main/enums.h"
 #include "main/mtypes.h"
+#include "main/shader_time.h"
+#include "main/shaderapi.h"
 
 
 namespace {
@@ -2524,13 +2526,29 @@ link_intrastage_shaders(void *mem_ctx,
    linked->Program->info.num_ubos = num_ubo_blocks;
 
    /* Copy ssbo blocks to linked shader list */
-   linked->Program->sh.ShaderStorageBlocks =
-      ralloc_array(linked, gl_uniform_block *, num_ssbo_blocks);
+   /* If shader profiling is enabled, we also add an SSBO at index 0 */
    ralloc_steal(linked, ssbo_blocks);
-   for (unsigned i = 0; i < num_ssbo_blocks; i++) {
-      linked->Program->sh.ShaderStorageBlocks[i] = &ssbo_blocks[i];
+   linked->Program->info.num_ssbos =
+      ctx->shader_profiling_enabled ?  num_ssbo_blocks+1 : num_ssbo_blocks;
+   linked->Program->sh.ShaderStorageBlocks =
+      ralloc_array(linked, gl_uniform_block*, linked->Program->info.num_ssbos);
+   struct gl_uniform_block *ssbo_prof_block = NULL;
+   if (ctx->shader_profiling_enabled) {
+      GLuint highest_bind = 0;
+      for (unsigned i = 0; i < num_ssbo_blocks; i++) {
+         if (ssbo_blocks[i].Binding >= highest_bind) {
+            highest_bind = ssbo_blocks[i].Binding;
+         }
+      }
+      ssbo_prof_block = _mesa_create_shader_time_block(linked, highest_bind+1);
    }
-   linked->Program->info.num_ssbos = num_ssbo_blocks;
+   if (ssbo_prof_block) {
+      linked->Program->sh.ShaderStorageBlocks[0] = ssbo_prof_block;
+   }
+   for (unsigned i = 0; i < num_ssbo_blocks; i++) {
+      int idx = ssbo_prof_block ? i+1 : i;
+      linked->Program->sh.ShaderStorageBlocks[idx] = &ssbo_blocks[i];
+   }
 
    /* At this point linked should contain all of the linked IR, so
     * validate it to make sure nothing went wrong.

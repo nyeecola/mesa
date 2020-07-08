@@ -4798,6 +4798,11 @@ struct gl_semaphore_object
    GLuint Name;            /**< hash table ID/name */
 };
 
+struct _gl_shader_time
+{
+   uint64_t Stages[MESA_SHADER_STAGES];
+};
+
 /**
  * Mesa rendering context.
  *
@@ -5178,6 +5183,22 @@ struct gl_context
    struct hash_table_u64 *ResidentTextureHandles;
    struct hash_table_u64 *ResidentImageHandles;
    /*@}*/
+
+   /**
+    * Stores shader time profiling information.
+    */
+   bool shader_profiling_enabled;
+   struct {
+      struct gl_buffer_object *BufObj;
+      double LastReportTime;
+      int *Ids;
+      struct _gl_shader_time *Times;
+      int NumEntries;
+      /* Maximum number of entries allocated in Times and Ids */
+      int MaxEntries;
+      /* used to preserve gl user state */
+      struct gl_buffer_object *PreviouslyBoundBufObj;
+   } ShaderTimes;
 
    bool shader_builtin_ref;
 };
