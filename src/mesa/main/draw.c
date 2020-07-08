@@ -40,6 +40,10 @@
 #include "enums.h"
 #include "macros.h"
 #include "transformfeedback.h"
+#include "program_resource.h"
+#include "shaderapi.h"
+#include "get.h"
+#include "shader_time.h"
 
 typedef struct {
    GLuint count;
@@ -371,8 +375,8 @@ _mesa_draw_arrays(struct gl_context *ctx, GLenum mode, GLint start,
    prim.start = start;
    prim.count = count;
 
-   ctx->Driver.Draw(ctx, &prim, 1, NULL,
-                    GL_TRUE, start, start + count - 1, NULL, 0, NULL);
+   _mesa_driver_draw(ctx, &prim, 1, NULL,
+                     GL_TRUE, start, start + count - 1, NULL, 0, NULL);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH) {
       _mesa_flush(ctx);
@@ -813,8 +817,8 @@ _mesa_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
     * for the latter case elsewhere.
     */
 
-   ctx->Driver.Draw(ctx, &prim, 1, &ib,
-                    index_bounds_valid, start, end, NULL, 0, NULL);
+   _mesa_driver_draw(ctx, &prim, 1, &ib,
+                     index_bounds_valid, start, end, NULL, 0, NULL);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH) {
       _mesa_flush(ctx);
@@ -1246,8 +1250,8 @@ _mesa_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
             prim[i].basevertex = 0;
       }
 
-      ctx->Driver.Draw(ctx, prim, primcount, &ib,
-                       false, 0, ~0, NULL, 0, NULL);
+      _mesa_driver_draw(ctx, prim, primcount, &ib,
+                        false, 0, ~0, NULL, 0, NULL);
    }
    else {
       /* render one prim at a time */
@@ -1275,7 +1279,7 @@ _mesa_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
          else
             prim[0].basevertex = 0;
 
-         ctx->Driver.Draw(ctx, prim, 1, &ib, false, 0, ~0, NULL, 0, NULL);
+         _mesa_driver_draw(ctx, prim, 1, &ib, false, 0, ~0, NULL, 0, NULL);
       }
    }
 
@@ -1393,7 +1397,7 @@ _mesa_draw_transform_feedback(struct gl_context *ctx, GLenum mode,
     * (like in DrawArrays), but we have no way to know how many vertices
     * will be rendered. */
 
-   ctx->Driver.Draw(ctx, &prim, 1, NULL, GL_FALSE, 0, ~0, obj, stream, NULL);
+   _mesa_driver_draw(ctx, &prim, 1, NULL, GL_FALSE, 0, ~0, obj, stream, NULL);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH) {
       _mesa_flush(ctx);
@@ -1477,10 +1481,10 @@ static void
 _mesa_validated_drawarraysindirect(struct gl_context *ctx,
                                    GLenum mode, const GLvoid *indirect)
 {
-   ctx->Driver.DrawIndirect(ctx, mode,
-                            ctx->DrawIndirectBuffer, (GLsizeiptr) indirect,
-                            1 /* draw_count */ , 16 /* stride */ ,
-                            NULL, 0, NULL);
+   _mesa_driver_draw_indirect(ctx, mode,
+                              ctx->DrawIndirectBuffer, (GLsizeiptr) indirect,
+                              1 /* draw_count */ , 16 /* stride */ ,
+                              NULL, 0, NULL);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
       _mesa_flush(ctx);
@@ -1498,8 +1502,8 @@ _mesa_validated_multidrawarraysindirect(struct gl_context *ctx,
    if (primcount == 0)
       return;
 
-   ctx->Driver.DrawIndirect(ctx, mode, ctx->DrawIndirectBuffer, offset,
-                            primcount, stride, NULL, 0, NULL);
+   _mesa_driver_draw_indirect(ctx, mode, ctx->DrawIndirectBuffer, offset,
+                              primcount, stride, NULL, 0, NULL);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
       _mesa_flush(ctx);
@@ -1518,10 +1522,10 @@ _mesa_validated_drawelementsindirect(struct gl_context *ctx,
    ib.obj = ctx->Array.VAO->IndexBufferObj;
    ib.ptr = NULL;
 
-   ctx->Driver.DrawIndirect(ctx, mode,
-                            ctx->DrawIndirectBuffer, (GLsizeiptr) indirect,
-                            1 /* draw_count */ , 20 /* stride */ ,
-                            NULL, 0, &ib);
+   _mesa_driver_draw_indirect(ctx, mode,
+                             ctx->DrawIndirectBuffer, (GLsizeiptr) indirect,
+                             1 /* draw_count */ , 20 /* stride */ ,
+                             NULL, 0, &ib);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
       _mesa_flush(ctx);
@@ -1547,9 +1551,9 @@ _mesa_validated_multidrawelementsindirect(struct gl_context *ctx,
    ib.obj = ctx->Array.VAO->IndexBufferObj;
    ib.ptr = NULL;
 
-   ctx->Driver.DrawIndirect(ctx, mode,
-                            ctx->DrawIndirectBuffer, offset,
-                            primcount, stride, NULL, 0, &ib);
+   _mesa_driver_draw_indirect(ctx, mode,
+                              ctx->DrawIndirectBuffer, offset,
+                              primcount, stride, NULL, 0, &ib);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
       _mesa_flush(ctx);
@@ -1829,10 +1833,10 @@ _mesa_validated_multidrawarraysindirectcount(struct gl_context *ctx,
    if (maxdrawcount == 0)
       return;
 
-   ctx->Driver.DrawIndirect(ctx, mode,
-                            ctx->DrawIndirectBuffer, offset,
-                            maxdrawcount, stride,
-                            ctx->ParameterBuffer, drawcount_offset, NULL);
+   _mesa_driver_draw_indirect(ctx, mode,
+                              ctx->DrawIndirectBuffer, offset,
+                              maxdrawcount, stride,
+                              ctx->ParameterBuffer, drawcount_offset, NULL);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
       _mesa_flush(ctx);
@@ -1860,10 +1864,10 @@ _mesa_validated_multidrawelementsindirectcount(struct gl_context *ctx,
    ib.obj = ctx->Array.VAO->IndexBufferObj;
    ib.ptr = NULL;
 
-   ctx->Driver.DrawIndirect(ctx, mode,
-                            ctx->DrawIndirectBuffer, offset,
-                            maxdrawcount, stride,
-                            ctx->ParameterBuffer, drawcount_offset, &ib);
+   _mesa_driver_draw_indirect(ctx, mode,
+                              ctx->DrawIndirectBuffer, offset,
+                              maxdrawcount, stride,
+                              ctx->ParameterBuffer, drawcount_offset, &ib);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
       _mesa_flush(ctx);
@@ -2100,8 +2104,8 @@ draw_indirect(struct gl_context *ctx, GLuint mode,
    /* This should always be true at this time */
    assert(indirect_data == ctx->DrawIndirectBuffer);
 
-   ctx->Driver.Draw(ctx, prim, draw_count, ib, false, 0u, ~0u,
-                    NULL, 0, indirect_data);
+   _mesa_driver_draw(ctx, prim, draw_count, ib, false, 0u, ~0u,
+                     NULL, 0, indirect_data);
 }
 
 
@@ -2143,4 +2147,33 @@ _mesa_draw_indirect(struct gl_context *ctx, GLuint mode,
 
       free(space);
    }
+}
+
+void
+_mesa_driver_draw(struct gl_context *ctx,
+                  const struct _mesa_prim *prims, GLuint nr_prims,
+                  const struct _mesa_index_buffer *ib,
+                  GLboolean index_bounds_valid,
+                  GLuint min_index, GLuint max_index,
+                  struct gl_transform_feedback_object *tfb_vertcount,
+                  unsigned tfb_stream, struct gl_buffer_object *indirect) {
+   _mesa_prepare_shader_time_buffer(ctx);
+   ctx->Driver.Draw(ctx, prims, nr_prims, ib, index_bounds_valid, min_index,
+                    max_index, tfb_vertcount, tfb_stream, indirect);
+   _mesa_collect_and_report_shader_time(ctx);
+}
+
+void
+_mesa_driver_draw_indirect(struct gl_context *ctx, GLuint mode,
+                           struct gl_buffer_object *indirect_data,
+                           GLsizeiptr indirect_offset, unsigned draw_count,
+                           unsigned stride,
+                           struct gl_buffer_object *indirect_draw_count_buffer,
+                           GLsizeiptr indirect_draw_count_offset,
+                           const struct _mesa_index_buffer *ib) {
+   _mesa_prepare_shader_time_buffer(ctx);
+   ctx->Driver.DrawIndirect(ctx, mode, indirect_data, indirect_offset,
+                            draw_count, stride, indirect_draw_count_buffer,
+                            indirect_draw_count_offset, ib);
+   _mesa_collect_and_report_shader_time(ctx);
 }

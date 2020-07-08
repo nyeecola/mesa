@@ -217,6 +217,14 @@ disk_cache_create(const char *gpu_name, const char *driver_id,
    if (env_var_as_boolean("MESA_GLSL_CACHE_DISABLE", false))
       goto fail;
 
+   /* When shader profiling is on, disable shader cache entirely. */
+   // TODO: this currently disables the shader cache even if the driver
+   //       does not support shader profiling, but only if the envvar is set.
+   //       if needed we can do it per-backend like INTEL_DEBUG=shader_time:
+   //       https://gitlab.freedesktop.org/mesa/mesa/commit/3887700dfd7597fba654a4a713c274213a4a8755
+   if (env_var_as_boolean("MESA_SHADER_TIME", false))
+      goto fail;
+
    cache = rzalloc(NULL, struct disk_cache);
    if (cache == NULL)
       goto fail;

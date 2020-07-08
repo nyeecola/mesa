@@ -29,6 +29,7 @@
 #include "program.h"
 #include "main/errors.h"
 #include "main/mtypes.h"
+#include "main/shader_time.h"
 
 namespace {
 
@@ -533,9 +534,21 @@ link_cross_validate_uniform_block(void *mem_ctx,
    for (unsigned int i = 0; i < *num_linked_blocks; i++) {
       struct gl_uniform_block *old_block = &(*linked_blocks)[i];
 
-      if (strcmp(old_block->Name, new_block->Name) == 0)
+      if (strcmp(old_block->Name, new_block->Name) == 0) {
+         /* TODO: This is a workaround for the way I am currently creating the
+          * extra block, because it is duplicated with different bindings so
+          * here I simply choose the highest one.
+          * Since there is a limited amount of bindings available, we need to
+          * to find a way to add the extra SSBO that doesn't mess with the
+          * bindings and preferably also does not touch the IR. */
+         if (strcmp(old_block->Name, SHADER_TIME_IFACE_NAME) == 0) {
+            int max_binding = MAX2(old_block->Binding, new_block->Binding);
+            old_block->Binding = max_binding;
+            new_block->Binding = max_binding;
+         }
          return link_uniform_blocks_are_compatible(old_block, new_block)
             ? i : -1;
+      }
    }
 
    *linked_blocks = reralloc(mem_ctx, *linked_blocks,

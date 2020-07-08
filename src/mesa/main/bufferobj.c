@@ -1414,8 +1414,8 @@ bind_buffer_base_uniform_buffer(struct gl_context *ctx,
  * Bind a buffer object to a shader storage block binding point.
  * As above, but offset = 0.
  */
-static void
-bind_buffer_base_shader_storage_buffer(struct gl_context *ctx,
+void
+_mesa_bind_buffer_base_shader_storage_buffer(struct gl_context *ctx,
                                        GLuint index,
                                        struct gl_buffer_object *bufObj)
 {
@@ -1541,8 +1541,8 @@ delete_buffers(struct gl_context *ctx, GLsizei n, const GLuint *ids)
          /* unbind SSBO binding points */
          for (j = 0; j < ctx->Const.MaxShaderStorageBufferBindings; j++) {
             if (ctx->ShaderStorageBufferBindings[j].BufferObject == bufObj) {
-               bind_buffer_base_shader_storage_buffer(ctx, j,
-                                                    ctx->Shared->NullBufferObj);
+               _mesa_bind_buffer_base_shader_storage_buffer(ctx, j,
+                                                   ctx->Shared->NullBufferObj);
             }
          }
 
@@ -4644,7 +4644,7 @@ _mesa_BindBufferBase(GLenum target, GLuint index, GLuint buffer)
       bind_buffer_base_uniform_buffer(ctx, index, bufObj);
       return;
    case GL_SHADER_STORAGE_BUFFER:
-      bind_buffer_base_shader_storage_buffer(ctx, index, bufObj);
+      _mesa_bind_buffer_base_shader_storage_buffer(ctx, index, bufObj);
       return;
    case GL_ATOMIC_COUNTER_BUFFER:
       bind_buffer_base_atomic_buffer(ctx, index, bufObj);

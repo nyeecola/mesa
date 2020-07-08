@@ -247,13 +247,13 @@ vbo_sw_primitive_restart(struct gl_context *ctx,
             temp_prim.count = MIN2(sub_end_index, end_index) - temp_prim.start;
             if ((temp_prim.start == sub_prim->start) &&
                 (temp_prim.count == sub_prim->count)) {
-               ctx->Driver.Draw(ctx, &temp_prim, 1, ib, GL_TRUE,
-                                sub_prim->min_index, sub_prim->max_index,
-                                NULL, 0, NULL);
+               _mesa_driver_draw(ctx, &temp_prim, 1, ib, GL_TRUE,
+                                 sub_prim->min_index, sub_prim->max_index,
+                                 NULL, 0, NULL);
             } else {
-               ctx->Driver.Draw(ctx, &temp_prim, 1, ib,
-                                GL_FALSE, -1, -1,
-                                NULL, 0, NULL);
+               _mesa_driver_draw(ctx, &temp_prim, 1, ib,
+                                 GL_FALSE, -1, -1,
+                                 NULL, 0, NULL);
             }
          }
          if (sub_end_index >= end_index) {
